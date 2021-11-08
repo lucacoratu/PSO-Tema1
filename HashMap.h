@@ -41,4 +41,7 @@ int remove_entry(HashMapEntry** map, const char* name, size_t max_size);
 //Clear the hash map
 void clear_hash__map(HashMapEntry** map, size_t max_size);
 
+//Deallocate the hash map
+void deallocate_hash_map(HashMapEntry** map, size_t max_size);
+
 #endif

@@ -7,17 +7,15 @@ HashMapEntry* hmap[MAP_MAX_SIZE];
 
 int main(int argc, char** argv) {
 	//First of all, the parameters received must be put accordingly in the parsed parameters structure
-	ParsedParameters* pParameters = NULL;
-	pParameters = parse_parameters(argc, argv, hmap, MAP_MAX_SIZE);
+	ParsedParameters* pParameters = parse_parameters(argc, argv, hmap, MAP_MAX_SIZE);
 	
 	if(pParameters == NULL) {
 		printf("Invalid option given, usage: ./so-cpp ");
 		return -1;
 	}
 	ParsedFile* pfile = NULL;
-	char* stdinContent = (char*)malloc(sizeof(char) * 1);
 	
-	if(strncmp(pParameters->infile, "stdin", 5) != 0){
+	if(pParameters->infile != NULL){
 	//Parse all of the parameters and check if they are valid
 		int correct = verify_parsed_parameters(pParameters);
 		if (correct == 0) {
@@ -31,8 +29,9 @@ int main(int argc, char** argv) {
 		//Read the file from standard input
 		int content_size = 0;
 		char ch = fgetc(stdin);
+		char* stdinContent = NULL;
 		while(ch != EOF){
-			stdinContent = (char*)realloc(stdinContent, (content_size + 1) * sizeof(char));
+			stdinContent = (char*)realloc(stdinContent, (content_size + 2) * sizeof(char));
 			stdinContent[content_size] = ch;
 			content_size++;
 			ch = fgetc(stdin);
@@ -40,6 +39,8 @@ int main(int argc, char** argv) {
 		stdinContent[content_size] = '\0';
 		
 		pfile = break_to_lines(stdinContent);
+		
+		//free(stdinContent);
 	}
 
 	//print_parsed_parameters_structure(pParameters);
@@ -51,7 +52,7 @@ int main(int argc, char** argv) {
 		//print_lines(pfile,1);
 
 		//Add the includes
-		pfile = add_includes(pfile,pParameters);
+		pfile = add_includes(pfile, pParameters);
 
 		//Print the lines
 		//print_lines(pfile, 1);
@@ -98,5 +99,9 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	clear_parsed_pointer(pfile);
+	deallocate_structure_memory(pParameters);
+	deallocate_hash_map(hmap, MAP_MAX_SIZE);
+	
 	return 0;
 }

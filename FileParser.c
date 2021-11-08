@@ -59,10 +59,18 @@ char* concatenate_strings(const char* string1,const char* string2) {
 //Print the lines in the ParsedFile structure
 void print_lines(ParsedFile* pFile, int debug) {
 	for (size_t i = 0; i < pFile->noLines; i++) {
-		if(debug == 1)
-			printf("Line[%ld]: %s\n", i, pFile->lines[i]);
-		else
-			printf("%s\n",pFile->lines[i]);
+		if(i != pFile->noLines - 1){
+			if(debug == 1)
+				printf("Line[%ld]: %s\n", i, pFile->lines[i]);
+			else
+				printf("%s\n",pFile->lines[i]);
+		}
+		else {
+			if(debug == 1)
+				printf("Line[%ld]: %s", i, pFile->lines[i]);
+			else
+				printf("%s",pFile->lines[i]);
+		}
 	}
 }
 
@@ -71,12 +79,23 @@ ParsedFile* initialize_pfile_struct(const char* filename) {
 	//Prepare the struct that will be returned
 	ParsedFile* pFile = (ParsedFile*)malloc(sizeof(ParsedFile));
 	MALLOC_ASSERT(pFile);
+	
+	pFile->filename = NULL;
+	pFile->lines = NULL;
+	pFile->noLines = 0;
 
 	//If the memory has been alocated
 	if (pFile != NULL) {
-		pFile->filename = (char*)malloc(sizeof(char) * (strlen(filename) + 1));
-		MALLOC_ASSERT(pFile->filename);
-		memccpy(pFile->filename, filename, sizeof(char), strlen(filename) + 1);
+		if(pFile->filename != NULL) {
+			pFile->filename = (char*)malloc(sizeof(char) * (strlen(filename) + 1));
+			MALLOC_ASSERT(pFile->filename);
+			memccpy(pFile->filename, filename, sizeof(char), strlen(filename) + 1);
+		}
+		else
+			pFile->filename = NULL;
+			
+		pFile->lines = NULL;
+		pFile->noLines = 0;
 	}
 	else {
 		return NULL;
@@ -236,23 +255,33 @@ void clear_parsed_pointer(ParsedFile* pFile) {
 		}
 		free(pFile->lines);
 		free(pFile->filename);
+		free(pFile);
 	}
+	
 }
 
 //Removes the line specified in the parameter
 ParsedFile* remove_line(ParsedFile* pFile, size_t line_index) {
 	ParsedFile* aux = (ParsedFile*)malloc(sizeof(ParsedFile));
 	MALLOC_ASSERT(aux);
+	
+	//Initializations
+	aux->filename = NULL;
 
 	aux->lines = (char**)malloc(sizeof(char*) * (pFile->noLines - 1));
 	MALLOC_ASSERT(aux->lines);
 	
 	aux->noLines = pFile->noLines - 1;
-
-	aux->filename = (char*)malloc(sizeof(char) * (strlen(pFile->filename) + 1));
-	MALLOC_ASSERT(aux->filename);
 	
-	memccpy(aux->filename, pFile->filename, sizeof(char), strlen(pFile->filename) + 1);
+	if(pFile->filename != NULL){
+		aux->filename = (char*)malloc(sizeof(char) * (strlen(pFile->filename) + 1));
+		MALLOC_ASSERT(aux->filename);
+	}
+	else
+		aux->filename = NULL;
+	
+	if(pFile->filename != NULL)
+		memccpy(aux->filename, pFile->filename, sizeof(char), strlen(pFile->filename) + 1);
 
 	int count = 0;
 	for (size_t i = 0; i < pFile->noLines; i++) {
@@ -272,14 +301,17 @@ ParsedFile* remove_line(ParsedFile* pFile, size_t line_index) {
 //Adds the lines to the back of the parsed file pointer
 ParsedFile* add_lines_back(ParsedFile* pFile, ParsedFile* pFileHeader) {
 	//Reserve the space needed for the lines
-	ParsedFile* aux = (ParsedFile*)malloc(sizeof(ParsedFile));
-	MALLOC_ASSERT(aux);
+	ParsedFile* aux = initialize_pfile_struct(NULL);
 	if (pFile != NULL) {
 		aux->lines = (char**)malloc(sizeof(char*) * (pFile->noLines + pFileHeader->noLines));
 		MALLOC_ASSERT(aux->lines);
 		aux->noLines = (pFile->noLines + pFileHeader->noLines);
-		aux->filename = (char*)malloc(sizeof(char) * (strlen(pFile->filename)));
-		MALLOC_ASSERT(aux->filename);
+		if(pFile->filename != NULL) {
+			aux->filename = (char*)malloc(sizeof(char) * (strlen(pFile->filename)));
+			MALLOC_ASSERT(aux->filename);
+		}
+		else
+			aux->filename = NULL;
 	}
 	else {
 		aux->lines = (char**)malloc(sizeof(char*) * (pFileHeader->noLines));
@@ -315,6 +347,7 @@ ParsedFile* add_lines_back(ParsedFile* pFile, ParsedFile* pFileHeader) {
 	}
 
 	clear_parsed_pointer(pFile);
+	clear_parsed_pointer(pFileHeader);
 	return aux;
 }
 
@@ -324,7 +357,7 @@ ParsedFile* add_includes(ParsedFile* pFile, ParsedParameters* pParameters) {
 	//If the line starts with #include "...
 	//Take the headername, get it's content, parse the file and concat the lines corresponding to the header with the lines in the current file
 	//Remove the line that contantains the include
-	ParsedFile* result = NULL;
+	ParsedFile* result = initialize_pfile_struct(NULL);
 	for (size_t i = 0; i < pFile->noLines; i++) {
 		if (strlen(pFile->lines[i]) >= 10) {
 			if (strncmp(pFile->lines[i], "#include \"", 10) == 0) {
@@ -350,6 +383,9 @@ ParsedFile* add_includes(ParsedFile* pFile, ParsedParameters* pParameters) {
 					ParsedFile* hFileAfterIncludes = add_includes(hFile, pParameters);
 
 					result = add_lines_back(result, hFileAfterIncludes);
+					
+					clear_parsed_pointer(hFile);
+					clear_parsed_pointer(hFileAfterIncludes);
 				}
 				else {
 					int found = 0;
@@ -368,6 +404,9 @@ ParsedFile* add_includes(ParsedFile* pFile, ParsedParameters* pParameters) {
 							//printf("Added header: %s\n", concat_result);
 							ParsedFile* hFileAfterIncludes = add_includes(hFile, pParameters);
 							result = add_lines_back(result, hFileAfterIncludes);
+							
+							clear_parsed_pointer(hFile);
+							clear_parsed_pointer(hFileAfterIncludes);
 						}
 
 						//Free the memory allocated by the concatenate_strings function
@@ -385,6 +424,8 @@ ParsedFile* add_includes(ParsedFile* pFile, ParsedParameters* pParameters) {
 
 	//Add the lines from the main file
 	result = add_lines_back(result, pFile);
+	
+	//clear_parsed_pointer(pFile);
 	return result;
 }
 
@@ -516,6 +557,7 @@ ParsedFile* load_simple_defines(HashMapEntry** map, size_t map_size, ParsedFile*
 					pFile = remove_line(pFile, i);
 
 					value = value_contains_other_define(map, map_size, value);
+					
 				}
 				else {
 					//Take the name and let the value be an empty string
@@ -536,6 +578,9 @@ ParsedFile* load_simple_defines(HashMapEntry** map, size_t map_size, ParsedFile*
 				//printf("Name: %s - Value: %s\n", name, value);
 				HashMapEntry* entry = create_entry(name, value);
 				insert_into_hash_map(map, entry, map_size);
+				
+				free(value);
+				free(name);
 				
 				i--;
 			}
@@ -638,6 +683,8 @@ ParsedFile* replace_define_names_with_values(HashMapEntry** map, size_t map_size
 									memccpy(beg, rest, sizeof(char), strlen(rest) + 1);
 								}
 								//printf("beg: %s",beg);
+								
+								free(rest);
 							}
 						}
 						

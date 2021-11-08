@@ -181,3 +181,16 @@ void clear_hash__map(HashMapEntry** map, size_t max_size) {
 		map[i] = NULL;
 	}
 }
+
+//Deallocate the hash map
+void deallocate_hash_map(HashMapEntry** map, size_t max_size) {
+	for (size_t i = 0; i < max_size; i++) {
+		if(map[i] != NULL){
+			free(map[i]->name);
+			free(map[i]->value);
+			free(map[i]);
+		}
+	}
+	//free(map);
+}
+

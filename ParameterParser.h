@@ -43,6 +43,11 @@ void print_parsed_parameters_structure(ParsedParameters* pParameters);
 
 int find_last_slash_or_backslash(char* string);
 
+//Deallocate the name mapping structure
+void deallocate_name_mapping(NameMapping* nm);
+
+//Deallocate the memory used by the structure
+void deallocate_structure_memory(ParsedParameters* pParameters);
 
 #endif // !PARAMETERPARSER_H
 

@@ -69,25 +69,27 @@ int find_last_slash_or_backslash(char* string) {
 //Take the list of parameters and construct the ParsedParameters based on it
 ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, size_t map_size) {
 	//Allocate the memory for the structure
-	ParsedParameters* pParameters = (ParsedParameters*)malloc(sizeof(ParsedParameters));
+	ParsedParameters* pParameters = (ParsedParameters*)malloc(sizeof(ParsedParameters) * 1);
 	MALLOC_ASSERT(pParameters);
-	//Intialization
+	
+	//Initialization
 	pParameters->outfile = NULL;
-	pParameters->infile = (char*)malloc(sizeof(char)*6);
-	memccpy(pParameters->infile, "stdin", sizeof(char), 6);
+	pParameters->infile = NULL;
 	pParameters->size_list = 0;
+	pParameters->name_mapping_list = NULL;
+	pParameters->in_directory = NULL;
 
 	if (pParameters != NULL) {
 		//If there is no parameter then read the file content from stdin
-		/*
-			if(argc == 1) {
-			
-			pParameters->infile = (char*)malloc(sizeof(char) * 6);
-			MALLOC_ASSERT(pParameters->infile);
-			memccpy(pParameters->infile, "stdin", sizeof(char), 6);
+		
+		if(argc == 1) {
+			//pParameters->infile = (char*)malloc(sizeof(char) * 6);
+			//MALLOC_ASSERT(pParameters->infile);
+			//memccpy(pParameters->infile, "stdin", sizeof(char), 6);
 			return pParameters;
 		}
 		
+		/*
 		//If there is only one parameter then it should be the in File;
 		if (argc >= 1) {
 			pParameters->infile = (char*)malloc(sizeof(char) * (strlen(argv[1]) + 1));
@@ -118,7 +120,7 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 			return NULL;
 		}
 		*/
-		if (argc >= 1) {
+		if (argc > 1) {
 			//It contains multiple options not just the name of the input file
 
 			pParameters->size_list = 0;
@@ -152,6 +154,9 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 								//TO DO... When insert returns 0 it means the map is full so extend the size
 								return NULL;
 							}
+							
+							free(name);
+							free(value);
 						}
 						//It has a mapping
 						else {
@@ -171,6 +176,9 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 								//TO DO... When insert returns 0 it means the map is full so extend the size
 								return NULL;
 							}
+							
+							free(name);
+							free(value);
 						}
 					}
 					//Else take the next argument
@@ -196,6 +204,9 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 								//TO DO... When insert returns 0 it means the map is full so extend the size
 								return NULL;
 							}
+							
+							free(name);
+							free(value);
 							//Skip the next parameter
 							i++;
 						}
@@ -218,6 +229,10 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 								//TO DO... When insert returns 0 it means the map is full so extend the size
 								return NULL;
 							}
+							
+							free(name);
+							free(value);
+							
 							//Skip the next parameter
 							i++;
 						}
@@ -290,6 +305,8 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 
 				//If does not have any option before so it must be the infile
 				//printf("Infile!\n");
+				free(pParameters->infile);
+				
 				pParameters->infile = (char*)malloc(sizeof(char) * (strlen(argv[i]) + 1));
 				MALLOC_ASSERT(pParameters->infile);
 				memccpy(pParameters->infile, argv[i], sizeof(char), strlen(argv[i]) + 1);
@@ -369,3 +386,39 @@ void print_parsed_parameters_structure(ParsedParameters* pParameters) {
 	}
 
 }
+
+//Deallocate the name mapping structure
+void deallocate_name_mapping(NameMapping* nm) {
+	if(nm != NULL) {
+		if(nm->option != NULL) {
+			free(nm->option);
+		}
+		if(nm->name != NULL) {
+			free(nm->name);
+		}
+		if(nm->mapping != NULL) {
+			free(nm->mapping);
+		}
+		free(nm);
+	}
+}
+
+//Deallocate the memory used by the structure
+void deallocate_structure_memory(ParsedParameters* pParameters) {
+	if(pParameters != NULL) {
+		if(pParameters->infile != NULL)
+			free(pParameters->infile);
+		if(pParameters->in_directory != NULL)
+			free(pParameters->in_directory);
+		if(pParameters->outfile != NULL)
+			free(pParameters->outfile);
+			
+		for(size_t i =0; i < pParameters->size_list; i++) {
+			deallocate_name_mapping(pParameters->name_mapping_list[i]);
+		}
+		
+		free(pParameters);
+	}
+}
+
+
