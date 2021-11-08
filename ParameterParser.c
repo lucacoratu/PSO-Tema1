@@ -305,11 +305,17 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 
 				//If does not have any option before so it must be the infile
 				//printf("Infile!\n");
+				if(pParameters->infile != NULL){
+					pParameters->size_list = 9999;
+					return pParameters;
+				}
+				
 				free(pParameters->infile);
 				
 				pParameters->infile = (char*)malloc(sizeof(char) * (strlen(argv[i]) + 1));
 				MALLOC_ASSERT(pParameters->infile);
 				memccpy(pParameters->infile, argv[i], sizeof(char), strlen(argv[i]) + 1);
+				
 				int pos = find_last_slash_or_backslash(pParameters->infile);
 				if(pos != -1) {
 					pParameters->in_directory = (char*)malloc(sizeof(char) * (pos + 1));
@@ -390,15 +396,9 @@ void print_parsed_parameters_structure(ParsedParameters* pParameters) {
 //Deallocate the name mapping structure
 void deallocate_name_mapping(NameMapping* nm) {
 	if(nm != NULL) {
-		if(nm->option != NULL) {
 			free(nm->option);
-		}
-		if(nm->name != NULL) {
 			free(nm->name);
-		}
-		if(nm->mapping != NULL) {
 			free(nm->mapping);
-		}
 		free(nm);
 	}
 }
@@ -406,19 +406,16 @@ void deallocate_name_mapping(NameMapping* nm) {
 //Deallocate the memory used by the structure
 void deallocate_structure_memory(ParsedParameters* pParameters) {
 	if(pParameters != NULL) {
-		if(pParameters->infile != NULL)
-			free(pParameters->infile);
-		if(pParameters->in_directory != NULL)
-			free(pParameters->in_directory);
-		if(pParameters->outfile != NULL)
-			free(pParameters->outfile);
+		free(pParameters->infile);
+		free(pParameters->in_directory);
+		free(pParameters->outfile);
 			
-		for(size_t i =0; i < pParameters->size_list; i++) {
+		for(size_t i = 0; i < pParameters->size_list; i++) {
 			deallocate_name_mapping(pParameters->name_mapping_list[i]);
 		}
-		
-		free(pParameters);
+		pParameters->size_list = 0;
 	}
+	free(pParameters);
 }
 
 

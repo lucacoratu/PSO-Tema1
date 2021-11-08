@@ -146,6 +146,8 @@ int remove_entry(HashMapEntry** map, const char* name, size_t max_size) {
 		//There is an entry on the code slot but we don't know if it is the right one
 		//Check if the map[code]->name == name
 		if (strcmp(map[code]->name, name) == 0) {
+			free(map[code]->name);
+			free(map[code]->value);
 			free(map[code]);
 			map[code] = NULL;
 			return 0;
@@ -159,6 +161,8 @@ int remove_entry(HashMapEntry** map, const char* name, size_t max_size) {
 				//Check if the name corresponds
 				if (map[new_code] != NULL) {
 					if (strcmp(map[new_code]->name, name) == 0) {
+						free(map[code]->name);
+						free(map[code]->value);
 						free(map[code]);
 						map[code] = NULL;
 						return 0;

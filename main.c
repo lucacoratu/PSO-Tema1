@@ -11,17 +11,34 @@ int main(int argc, char** argv) {
 	
 	if(pParameters == NULL) {
 		printf("Invalid option given, usage: ./so-cpp ");
+		deallocate_structure_memory(pParameters);
+		deallocate_hash_map(hmap, MAP_MAX_SIZE);
 		return -1;
 	}
 	ParsedFile* pfile = NULL;
 	
 	if(pParameters->infile != NULL){
 	//Parse all of the parameters and check if they are valid
-		int correct = verify_parsed_parameters(pParameters);
-		if (correct == 0) {
-			//Exit the program with error
-			return -1;
+		if(pParameters->size_list == 9999){
+			//This means it has multiple input files
+			printf("Program can handle only 1(one) input file!\n");
+			deallocate_structure_memory(pParameters);
+			clear_parsed_pointer(pfile);	
+			deallocate_hash_map(hmap, MAP_MAX_SIZE);
+			exit(-1);
 		}
+		
+		FILE* file = fopen(pParameters->infile, "r");
+		if(file == NULL)
+		{
+			printf("Cannot locate the input file\n");
+			deallocate_structure_memory(pParameters);
+			clear_parsed_pointer(pfile);	
+			deallocate_hash_map(hmap, MAP_MAX_SIZE);
+			exit(-1);
+		}
+		
+		fclose(file);
 		
 		 pfile = break_into_lines(pParameters->infile);
 	}
@@ -99,8 +116,8 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	clear_parsed_pointer(pfile);
 	deallocate_structure_memory(pParameters);
+	clear_parsed_pointer(pfile);	
 	deallocate_hash_map(hmap, MAP_MAX_SIZE);
 	
 	return 0;

@@ -59,11 +59,11 @@ char* concatenate_strings(const char* string1,const char* string2) {
 //Print the lines in the ParsedFile structure
 void print_lines(ParsedFile* pFile, int debug) {
 	for (size_t i = 0; i < pFile->noLines; i++) {
-		if(i != pFile->noLines - 1){
+		if(i != pFile->noLines) {
 			if(debug == 1)
 				printf("Line[%ld]: %s\n", i, pFile->lines[i]);
 			else
-				printf("%s\n",pFile->lines[i]);
+				printf("%s\n", pFile->lines[i]);
 		}
 		else {
 			if(debug == 1)
@@ -289,7 +289,7 @@ ParsedFile* remove_line(ParsedFile* pFile, size_t line_index) {
 			aux->lines[count] = (char*)malloc(sizeof(char) * (strlen(pFile->lines[i]) + 1));
 			MALLOC_ASSERT(aux->lines[count]);
 
-			memccpy(aux->lines[count], pFile->lines[i], sizeof(char), strlen(pFile->lines[i]) + 1);
+			memccpy(aux->lines[count], pFile->lines[i], sizeof(char), (strlen(pFile->lines[i]) + 1));
 			count++;
 		}
 	}
@@ -503,9 +503,11 @@ char* value_contains_other_define(HashMapEntry** map, size_t map_size, char* val
 				MALLOC_ASSERT(rest);
 				if (rest != NULL) {
 					memccpy(rest, beg + strlen(map[i]->name), sizeof(char), strlen(beg + strlen(map[i]->name)) + 1);
-					memccpy(beg, map[i]->value, sizeof(char), strlen(map[i]->name) + 1);
+					memccpy(beg, map[i]->value, sizeof(char), strlen(map[i]->value) + 1);
 					memccpy(beg + strlen(beg), rest, sizeof(char), strlen(rest) + 1);
 					//printf("Beg: %s",beg);
+					
+					free(rest);
 				}
 
 				beg += strlen(map[i]->value);
@@ -662,43 +664,50 @@ ParsedFile* replace_define_names_with_values(HashMapEntry** map, size_t map_size
 			//Check if the line contains a define name
 			for (size_t j = 0; j < map_size; j++) {
 				if (map[j] != NULL) {
-					char* beg = strstr(pFile->lines[i], map[j]->name);
-					//It contains the define name
-					//Check if the string is inside double quotes
-					//printf("In replace_define_names");
-					while (beg != NULL) {
-						if (check_name_inside_dquotes(pFile->lines[i], beg) == 0) {
-							//It is no between double quotes
-							//Replace the name with the value
-							char* rest = (char*)malloc(sizeof(char) * (strlen(beg + strlen(map[j]->name)) + 1));
-							MALLOC_ASSERT(rest);
-							if (rest != NULL) {
-								memccpy(rest, beg + strlen(map[j]->name), sizeof(char), strlen(beg + strlen(map[j]->name)) + 1);
-								//printf("Rest = %s",rest);
-								if(strlen(map[j]->value) != 0){
-									memccpy(beg, map[j]->value, sizeof(char), strlen(map[j]->value) + 1);
-									memccpy(beg + strlen(beg), rest, sizeof(char), strlen(rest) + 1);
+						char* beg = strstr(pFile->lines[i], map[j]->name);
+						//It contains the define name
+						//Check if the string is inside double quotes
+						//printf("In replace_define_names");
+						while (beg != NULL) {
+							if (check_name_inside_dquotes(pFile->lines[i], beg) == 0) {
+								//It is no between double quotes
+								//Replace the name with the value
+								char* rest = (char*)malloc(sizeof(char) * (strlen(beg + strlen(map[j]->name)) + 1));
+								MALLOC_ASSERT(rest);
+								if (rest != NULL) {
+									memccpy(rest, beg + strlen(map[j]->name), sizeof(char), strlen(beg + strlen(map[j]->name)) + 1);
+									
+									if(strlen(map[j]->value) != 0 && strlen(map[j]->value) > strlen(map[j]->name)) {
+										pFile->lines[i] = (char*)realloc(pFile->lines[i], sizeof(char) * (beg - pFile->lines[i] + strlen(map[j]->value) + strlen(rest) + 1));
+										MALLOC_ASSERT(pFile->lines[i]);
+
+										beg = strstr(pFile->lines[i], map[j]->name);
+									}
+
+									if(strlen(map[j]->value) != 0){
+										memccpy(beg, map[j]->value, sizeof(char), strlen(map[j]->value) + 1);
+										memccpy(beg + strlen(beg), rest, sizeof(char), strlen(rest) + 1);
+									}
+									else {
+										memccpy(beg, rest, sizeof(char), strlen(rest) + 1);
+									}
+									//printf("beg: %s",beg);
+									
+									free(rest);
 								}
-								else {
-									memccpy(beg, rest, sizeof(char), strlen(rest) + 1);
-								}
-								//printf("beg: %s",beg);
-								
-								free(rest);
 							}
-						}
-						
-						if(strlen(map[j]->value) != 0)
-							beg += strlen(map[j]->value);
-						else
-							beg += 1;
 							
-						if(beg != NULL)
-							beg = strstr(beg, map[j]->name);
-						else
-							break;
-					}
-					//printf("Am iesti din replace_define_names");
+							if(strlen(map[j]->value) != 0)
+								beg += strlen(map[j]->value);
+							else
+								beg += 1;
+								
+							if(beg != NULL)
+								beg = strstr(beg, map[j]->name);
+							else
+								break;
+						}
+
 				}
 			}
 		}
