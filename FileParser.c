@@ -395,27 +395,27 @@ ParsedFile* add_includes(ParsedFile* pFile, ParsedParameters* pParameters) {
 					int found = 0;
 					for (size_t j = 0; j < pParameters->size_list; j++) {
 						char* concat_result = concatenate_strings(pParameters->name_mapping_list[j]->mapping, "/");
-						concat_result = concatenate_strings(concat_result, include_name);
+						char* concat_result2 = concatenate_strings(concat_result, include_name);
+
+						
 
 						//DEBUG...Remove later
 						//printf("Concat result: %s\n", concat_result);
 						
 						//Check if the file is in the aditional include directory
-						ParsedFile* hFile = break_into_lines(concat_result);
+						ParsedFile* hFile = break_into_lines(concat_result2);
 						if (hFile != NULL) {
 							//The header file has been found
 							found = 1;
 							//printf("Added header: %s\n", concat_result);
 							ParsedFile* hFileAfterIncludes = add_includes(hFile, pParameters);
 							result = add_lines_back(result, hFileAfterIncludes);
-							
-							clear_parsed_pointer(hFile);
-							clear_parsed_pointer(hFileAfterIncludes);
+						
 						}
 
 						//Free the memory allocated by the concatenate_strings function
 						free(concat_result);
-						
+						free(concat_result2);
 					}
 
 					free(include_name);
@@ -571,7 +571,7 @@ ParsedFile* load_simple_defines(HashMapEntry** map, size_t map_size, ParsedFile*
 				else {
 					//Take the name and let the value be an empty string
 					int name_length = strlen(start + 8);
-					name = (char*)malloc(sizeof(char) * name_length);
+					name = (char*)malloc(sizeof(char) * (name_length + 1));
 					MALLOC_ASSERT(name);
 					memccpy(name, (start + 8), sizeof(char), name_length);
 					name[name_length] = '\0';
