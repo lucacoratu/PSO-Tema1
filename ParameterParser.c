@@ -139,6 +139,7 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 							//It does not have a mapping 
 							name = (char*)malloc(sizeof(char) * (strlen(name_and_mapping) + 1));
 							MALLOC_ASSERT(name);
+							memset(name, '\0', (strlen(name_and_mapping) + 1));
 							memccpy(name, name_and_mapping, sizeof(char), strlen(name_and_mapping));
 							
 							//printf("Define no value: %s", name);
@@ -163,11 +164,13 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 							int name_length = equals_sign - name_and_mapping;
 							name = (char*)malloc(sizeof(char) * (name_length + 1));
 							MALLOC_ASSERT(name);
+							memset(name, '\0', (name_length + 1));
 							memccpy(name, name_and_mapping, sizeof(char), name_length);
 							name[name_length] = '\0';
 
 							value = (char*)malloc(sizeof(char) * (strlen(equals_sign + 1) + 1));
 							MALLOC_ASSERT(value);
+							memset(value, '\0', (strlen(equals_sign + 1) + 1));
 							memccpy(value, equals_sign + 1, sizeof(char), strlen(equals_sign + 1) + 1);
 						
 							HashMapEntry* entry = create_entry(name, value);
@@ -191,6 +194,7 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 							//It does not have a mapping
 							name = (char*)malloc(sizeof(char) * (strlen(name_and_mapping) + 1));
 							MALLOC_ASSERT(name);
+							memset(name, '\0', (strlen(name_and_mapping) + 1));
 							memccpy(name, name_and_mapping, sizeof(char), strlen(name_and_mapping));
 
 							value = (char*)malloc(sizeof(char) * 1);
@@ -215,11 +219,13 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 							int name_length = equals_sign - name_and_mapping;
 							name = (char*)malloc(sizeof(char) * (name_length + 1));
 							MALLOC_ASSERT(name);
+							memset(name, '\0', (name_length + 1));
 							memccpy(name, name_and_mapping, sizeof(char), name_length);
 							name[name_length] = '\0';
 
 							value = (char*)malloc(sizeof(char) * (strlen(equals_sign + 1) + 1));
 							MALLOC_ASSERT(value);
+							memset(value, '\0', (strlen(equals_sign + 1) + 1));
 							memccpy(value, equals_sign + 1, sizeof(char), strlen(equals_sign + 1) + 1);
 
 							HashMapEntry* entry = create_entry(name, value);
