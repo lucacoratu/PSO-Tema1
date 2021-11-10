@@ -10,20 +10,20 @@ int main(int argc, char** argv) {
 	ParsedParameters* pParameters = parse_parameters(argc, argv, hmap, MAP_MAX_SIZE);
 	
 	if(pParameters == NULL) {
-		printf("Invalid option given, usage: ./so-cpp ");
-		deallocate_structure_memory(pParameters);
+		printf("Invalid option given, usage: ./so-cpp [-D <SYMBOL>[=<MAPPING>]] [-I <DIR>] [<INFILE>] [ [-o] <OUTFILE>]\n");
 		deallocate_hash_map(hmap, MAP_MAX_SIZE);
 		return -1;
 	}
+
 	ParsedFile* pfile = NULL;
 	
 	if(pParameters->infile != NULL){
 	//Parse all of the parameters and check if they are valid
 		if(pParameters->size_list == 9999){
 			//This means it has multiple input files
-			printf("Program can handle only 1(one) input file!\n");
+			fprintf(stdout, "Program can handle only 1(one) input file!\n");
+			pParameters->size_list = 1;
 			deallocate_structure_memory(pParameters);
-			clear_parsed_pointer(pfile);	
 			deallocate_hash_map(hmap, MAP_MAX_SIZE);
 			exit(-1);
 		}

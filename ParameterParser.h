@@ -27,7 +27,7 @@ typedef struct {
 NameMapping* create_name_mapping(char* option, char* name, char* mapping);
 
 //Add the NameMapping stucture to the list in ParsedParameters stucture
-ParsedParameters* add_name_mapping_into_parsed_parameters(NameMapping* nm, ParsedParameters* pParameters);
+void add_name_mapping_into_parsed_parameters(NameMapping* nm, ParsedParameters* pParameters);
 
 //Take the list of parameters and construct the ParsedParameters based on it
 ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, size_t map_size);

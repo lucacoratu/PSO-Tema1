@@ -251,10 +251,13 @@ ParsedFile* break_into_lines(const char* filename) {
 void clear_parsed_pointer(ParsedFile* pFile) {
 	if (pFile != NULL) {
 		for (size_t i = 0; i < pFile->noLines; i++) {
-			free(pFile->lines[i]);
+			if(pFile->lines[i] != NULL)
+				free(pFile->lines[i]);
 		}
-		free(pFile->lines);
-		free(pFile->filename);
+		if(pFile->lines != NULL)
+			free(pFile->lines);
+		if(pFile->filename != NULL)
+			free(pFile->filename);
 		free(pFile);
 	}
 	
@@ -363,7 +366,7 @@ ParsedFile* add_includes(ParsedFile* pFile, ParsedParameters* pParameters) {
 			if (strncmp(pFile->lines[i], "#include \"", 10) == 0) {
 				//Include has been found
 				int header_name_length = strlen(pFile->lines[i]) - 11;
-				char* include_name = (char*)malloc(sizeof(char) * header_name_length); 
+				char* include_name = (char*)malloc(sizeof(char) * header_name_length + 1); 
 				MALLOC_ASSERT(include_name);
 				memccpy(include_name, pFile->lines[i] + 10, sizeof(char), header_name_length);
 				include_name[header_name_length] = '\0';
@@ -384,8 +387,9 @@ ParsedFile* add_includes(ParsedFile* pFile, ParsedParameters* pParameters) {
 
 					result = add_lines_back(result, hFileAfterIncludes);
 					
-					clear_parsed_pointer(hFile);
-					clear_parsed_pointer(hFileAfterIncludes);
+					free(include_name);
+					//clear_parsed_pointer(hFile);
+					//clear_parsed_pointer(hFileAfterIncludes);
 				}
 				else {
 					int found = 0;
@@ -411,7 +415,10 @@ ParsedFile* add_includes(ParsedFile* pFile, ParsedParameters* pParameters) {
 
 						//Free the memory allocated by the concatenate_strings function
 						free(concat_result);
+						
 					}
+
+					free(include_name);
 
 					if (found == 0) {
 						//Return with an error

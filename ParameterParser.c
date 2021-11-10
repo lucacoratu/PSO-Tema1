@@ -37,13 +37,15 @@ NameMapping* create_name_mapping(char* option, char* name, char* mapping) {
 }
 
 //Add the NameMapping stucture to the list in ParsedParameters stucture
-ParsedParameters* add_name_mapping_into_parsed_parameters(NameMapping* nm, ParsedParameters* pParameters) {
+void add_name_mapping_into_parsed_parameters(NameMapping* nm, ParsedParameters* pParameters) {
 	if (pParameters->size_list == 0) {
-		pParameters->name_mapping_list = (NameMapping**)malloc(sizeof(NameMapping*) * (pParameters->size_list + 1));
-		MALLOC_ASSERT(pParameters->name_mapping_list);
+		if(nm != NULL){
+			pParameters->name_mapping_list = (NameMapping**)malloc(sizeof(NameMapping*) * (pParameters->size_list + 1));
+			MALLOC_ASSERT(pParameters->name_mapping_list);
 
-		pParameters->name_mapping_list[pParameters->size_list] = nm;
-		pParameters->size_list++;
+			pParameters->name_mapping_list[pParameters->size_list] = nm;
+			pParameters->size_list++;
+		}
 	}
 	else {
 		pParameters->name_mapping_list = (NameMapping**)realloc(pParameters->name_mapping_list, sizeof(NameMapping*) * (pParameters->size_list + 1));
@@ -52,8 +54,6 @@ ParsedParameters* add_name_mapping_into_parsed_parameters(NameMapping* nm, Parse
 		pParameters->name_mapping_list[pParameters->size_list] = nm;
 		pParameters->size_list++;
 	}
-
-	return pParameters;
 }
 
 int find_last_slash_or_backslash(char* string) {
@@ -275,7 +275,7 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 						option[2] = '\0';
 
 						NameMapping* nm = create_name_mapping(option, NULL, mapping);
-						pParameters = add_name_mapping_into_parsed_parameters(nm, pParameters);
+						add_name_mapping_into_parsed_parameters(nm, pParameters);
 					
 						free(option);
 					}
@@ -288,7 +288,7 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 						option[2] = '\0';
 
 						NameMapping* nm = create_name_mapping(option, NULL, mapping);
-						pParameters = add_name_mapping_into_parsed_parameters(nm, pParameters);
+						add_name_mapping_into_parsed_parameters(nm, pParameters);
 
 						//Skip the next argument
 						free(option);
@@ -300,6 +300,7 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 				
 				if(strncmp(argv[i],"-",1) == 0){
 					//Invalid option given to the program
+					deallocate_structure_memory(pParameters);
 					return NULL;
 				}
 
@@ -321,14 +322,16 @@ ParsedParameters* parse_parameters(int argc, char** argv, HashMapEntry** map, si
 					pParameters->in_directory = (char*)malloc(sizeof(char) * (pos + 1));
 					MALLOC_ASSERT(pParameters->in_directory);
 					memccpy(pParameters->in_directory, pParameters->infile, sizeof(char), pos + 1);
+					pParameters->in_directory[pos] = '\0';
 					//printf("In directory: %s\n", pParameters->in_directory);
 					char* option = (char*)malloc(sizeof(char) * 3);
 					MALLOC_ASSERT(option);
 					strncpy(option, "-I", 3);
 					option[2] = '\0';
 
+
 					NameMapping* nm = create_name_mapping(option, NULL, pParameters->in_directory);
-					pParameters = add_name_mapping_into_parsed_parameters(nm, pParameters);
+					add_name_mapping_into_parsed_parameters(nm, pParameters);
 
 					free(option);
 				}
@@ -396,11 +399,12 @@ void print_parsed_parameters_structure(ParsedParameters* pParameters) {
 //Deallocate the name mapping structure
 void deallocate_name_mapping(NameMapping* nm) {
 	if(nm != NULL) {
+		if(nm->option != NULL)
 			free(nm->option);
-			free(nm->name);
-			free(nm->mapping);
-		free(nm);
+		free(nm->name);
+		free(nm->mapping);
 	}
+	free(nm);
 }
 
 //Deallocate the memory used by the structure
@@ -413,9 +417,11 @@ void deallocate_structure_memory(ParsedParameters* pParameters) {
 		for(size_t i = 0; i < pParameters->size_list; i++) {
 			deallocate_name_mapping(pParameters->name_mapping_list[i]);
 		}
+		free(pParameters->name_mapping_list);
+		//free(pParameters->name_mapping_list);
 		pParameters->size_list = 0;
+		free(pParameters);
 	}
-	free(pParameters);
 }
 
 
